@@ -38,10 +38,9 @@ path.directory = C://data_feed//
 
 # Analyzing data
 
-Previusly must exist datas in /home/ubuntu/data_feed/ directory to analysis data.
-To display the price in BUY or SELL , just execute the next command
+Previusly must exist datas in /home/ubuntu/data_feed/ directory to analysis.
 
 ```linux
-mvn exec:java -Dexec.mainClass="com.stacksavings.main.BuySell"
+mvn exec:java -Dexec.mainClass="com.stacksavings.indicators.ROCIndicatorCalculate"
 ```
 
