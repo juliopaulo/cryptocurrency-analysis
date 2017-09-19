@@ -9,12 +9,7 @@ import eu.verdelhan.ta4j.indicators.simple.ClosePriceIndicator;
 import eu.verdelhan.ta4j.indicators.trackers.EMAIndicator;
 import eu.verdelhan.ta4j.indicators.trackers.MACDIndicator;
 import eu.verdelhan.ta4j.indicators.trackers.SMAIndicator;
-import eu.verdelhan.ta4j.trading.rules.CrossedDownIndicatorRule;
-import eu.verdelhan.ta4j.trading.rules.CrossedUpIndicatorRule;
-import eu.verdelhan.ta4j.trading.rules.OverIndicatorRule;
-import eu.verdelhan.ta4j.trading.rules.StopGainRule;
-import eu.verdelhan.ta4j.trading.rules.StopLossRule;
-import eu.verdelhan.ta4j.trading.rules.UnderIndicatorRule;
+import eu.verdelhan.ta4j.trading.rules.*;
 
 
 /**
@@ -69,40 +64,51 @@ public class BuySellStrategy {
         Rule sellingRule = new CrossedDownIndicatorRule(shortSma, longSma)
                 .or(new StopLossRule(closePrice, Decimal.valueOf("3")))
                 .or(new StopGainRule(closePrice, Decimal.valueOf("2")));
-        
-        // Running our juicy trading strategy...
-        //TradingRecord tradingRecord = series.run(new Strategy(buyingRule, sellingRule));
-        
+
         return new Strategy(buyingRule, sellingRule);
 	}
-	
-	public static Strategy buildStrategyEMA(TimeSeries series) {
+
+	/**
+	 * Build Exponential Moving Average strategy
+	 * @param series
+	 * @param shortTimeFrame
+	 * @param longTimeFrame
+	 * @return
+	 */
+	public static Strategy buildStrategyEMA(TimeSeries series, final int shortTimeFrame, final int longTimeFrame) {
 		 if (series == null) {
 	            throw new IllegalArgumentException("Series cannot be null");
 	        }
 
 	        ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-	        
+
 	        // The bias is bullish when the shorter-moving average moves above the longer moving average.
 	        // The bias is bearish when the shorter-moving average moves below the longer moving average.
-	        EMAIndicator shortEma = new EMAIndicator(closePrice, 9);
-	        EMAIndicator longEma = new EMAIndicator(closePrice, 26);
+	        EMAIndicator shortEma = new EMAIndicator(closePrice, shortTimeFrame);
+	        EMAIndicator longEma = new EMAIndicator(closePrice, longTimeFrame);
 
 	        StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(series, 14);
 
-	        MACDIndicator macd = new MACDIndicator(closePrice, 9, 26);
+	        MACDIndicator macd = new MACDIndicator(closePrice, shortTimeFrame, longTimeFrame);
 	        EMAIndicator emaMacd = new EMAIndicator(macd, 18);
-	        
+
 	        // Entry rule
 	        Rule entryRule = new OverIndicatorRule(shortEma, longEma) // Trend
 	                .and(new CrossedDownIndicatorRule(stochasticOscillK, Decimal.valueOf(20))) // Signal 1
-	                .and(new OverIndicatorRule(macd, emaMacd)); // Signal 2
-	        
+	                .and(new OverIndicatorRule(macd, emaMacd))
+					;
+
+
 	        // Exit rule
 	        Rule exitRule = new UnderIndicatorRule(shortEma, longEma) // Trend
 	                .and(new CrossedUpIndicatorRule(stochasticOscillK, Decimal.valueOf(80))) // Signal 1
-	                .and(new UnderIndicatorRule(macd, emaMacd)); // Signal 2
-	        
+	                .and(new UnderIndicatorRule(macd, emaMacd))
+					;
+
+
 	        return new Strategy(entryRule, exitRule);
 	}
+
+
+
 }
